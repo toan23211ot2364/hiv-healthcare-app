@@ -20,6 +20,8 @@ router.post('/register', async (req, res) => {
       return;
     }
     const hash = password ? await bcrypt.hash(password, 10) : undefined;
+    const role = isAnonymous ? 'patient' :
+      (email === 'admin@hiv.com' ? 'admin' : (email === 'doctor@hiv.com' ? 'doctor' : 'patient'));
     const user = userRepo.create({
       email: isAnonymous ? undefined : email,
       password: hash,
@@ -27,9 +29,10 @@ router.post('/register', async (req, res) => {
       phone,
       address,
       isAnonymous: !!isAnonymous,
+      role,
     });
     await userRepo.save(user);
-    res.status(201).json({ message: 'Đăng ký thành công', user: { id: user.id, isAnonymous: user.isAnonymous } });
+    res.status(201).json({ message: 'Đăng ký thành công', user: { id: user.id, isAnonymous: user.isAnonymous, role: user.role } });
   } catch (err) {
     res.status(500).json({ message: 'Lỗi server', error: err });
   }
@@ -50,8 +53,8 @@ router.post('/login', async (req, res) => {
       res.status(400).json({ message: 'Email hoặc mật khẩu không đúng.' });
       return;
     }
-    const token = jwt.sign({ userId: user.id, isAnonymous: user.isAnonymous }, process.env.JWT_SECRET as string, { expiresIn: '7d' });
-    res.json({ token, user: { id: user.id, email: user.email, isAnonymous: user.isAnonymous } });
+    const token = jwt.sign({ userId: user.id, isAnonymous: user.isAnonymous, role: user.role }, process.env.JWT_SECRET as string, { expiresIn: '7d' });
+    res.json({ token, user: { id: user.id, email: user.email, isAnonymous: user.isAnonymous, role: user.role } });
   } catch (err) {
     res.status(500).json({ message: 'Lỗi server', error: err });
   }

@@ -7,6 +7,7 @@ import { AppDataSource } from './data-source';
 import authRouter from './routes/auth';
 import appointmentRouter from './routes/appointment';
 import doctorRouter from './routes/doctor';
+import medicalRecordRouter from './routes/medicalRecord';
 
 // Load environment variables
 dotenv.config();
@@ -24,6 +25,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRouter);
 app.use('/api/appointments', appointmentRouter);
 app.use('/api/doctors', doctorRouter);
+app.use('/api/medical-record', medicalRecordRouter);
 
 AppDataSource.initialize()
   .then(() => {

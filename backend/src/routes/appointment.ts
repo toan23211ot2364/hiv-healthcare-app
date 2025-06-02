@@ -62,6 +62,49 @@ router.get('/my', authMiddleware, async (req: any, res) => {
   }
 });
 
+// Lấy toàn bộ lịch hẹn (chỉ admin)
+router.get('/all', authMiddleware, async (req: any, res) => {
+  try {
+    const userRepo = AppDataSource.getRepository(User);
+    const user = await userRepo.findOneBy({ id: req.user.userId });
+    if (!user || user.email !== 'admin@hiv.com') {
+      res.status(403).json({ message: 'Chỉ admin được phép xem toàn bộ lịch hẹn.' });
+      return;
+    }
+    const appointmentRepo = AppDataSource.getRepository(Appointment);
+    const list = await appointmentRepo.find({
+      relations: ['doctor', 'user'],
+      order: { appointmentDate: 'DESC' },
+    });
+    res.json(list);
+  } catch (err) {
+    res.status(500).json({ message: 'Lỗi server', error: err });
+  }
+});
+
+// Lấy lịch hẹn của bác sĩ (bác sĩ đăng nhập)
+router.get('/doctor', authMiddleware, async (req: any, res) => {
+  try {
+    const userRepo = AppDataSource.getRepository(User);
+    const doctorRepo = AppDataSource.getRepository(Doctor);
+    const user = await userRepo.findOneBy({ id: req.user.userId });
+    const doctor = await doctorRepo.findOneBy({ email: user?.email });
+    if (!doctor) {
+      res.status(403).json({ message: 'Chỉ bác sĩ được phép xem lịch hẹn này.' });
+      return;
+    }
+    const appointmentRepo = AppDataSource.getRepository(Appointment);
+    const list = await appointmentRepo.find({
+      where: { doctor: { id: doctor.id } },
+      relations: ['user'],
+      order: { appointmentDate: 'DESC' },
+    });
+    res.json(list);
+  } catch (err) {
+    res.status(500).json({ message: 'Lỗi server', error: err });
+  }
+});
+
 export default router;
 
 export {};

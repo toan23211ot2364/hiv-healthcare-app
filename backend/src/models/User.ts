@@ -24,6 +24,9 @@ export class User {
   @Column({ nullable: true })
   address?: string;
 
+  @Column({ default: 'patient' })
+  role!: 'patient' | 'doctor' | 'admin';
+
   @CreateDateColumn()
   createdAt!: Date;
 
